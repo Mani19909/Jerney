@@ -76,7 +76,7 @@ module 'eks' {
         "controllerManager",
         "scheduler"
     ]
-
+# remove
     # Allow current caller (your IAM user/role) to manager the cluster
     enable_cluster_creator_admin_permissions = true
 }
