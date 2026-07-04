@@ -31,7 +31,7 @@ sudo apt install -y nginx
 
 # --- Install PM2 (process manager) ---
 echo "📦 Installing PM2..."
-sudo npm install -g pm2
+sudo apt install -g pm2
 
 # --- Configure PostgreSQL ---
 echo "🗄️  Configuring PostgreSQL..."
