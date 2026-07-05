@@ -5,7 +5,7 @@
 data "aws_availability_zones" "available" {
     filter {
         name = "opt-in-status"
-        values = ["opt-in-not-requuired"]
+        values = ["opt-in-not-required"]
     }
 }
 
@@ -53,8 +53,8 @@ module "eks" {
     }
 
     # Networking 
-    vpc_id                = module.vpc.vpc_id
-    public_subnet_cidrs   = module.vpc.private_subnet
+    vpc_id         = module.vpc.vpc_id
+    subnet_ids   = module.vpc.private_subnets 
 
     # Security: enable private endpoint, public for initial kubectl access
     cluster_endpoint_public_access   =   true
