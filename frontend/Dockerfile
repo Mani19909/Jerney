@@ -43,7 +43,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm Install && npm cache clean --force
+RUN npm install && npm cache clean --force
 
 # Copy application source
 COPY . .
