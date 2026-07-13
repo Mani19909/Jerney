@@ -43,8 +43,8 @@ parameters:
   type: gp3
   encrypted: "true"
 reclaimPolicy: Retain
-volueBindingMode: WaitForFirstConsumer
-allowVolumeExpansoin: true
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
 
 ---
 # ----- PersistentVolumeClaim for PostgreSQL (EBS) -----
@@ -66,7 +66,7 @@ spec:
 
 ---
 # ---- PostgreSQL Deployment --------
-apiVersion: app/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jerney-db
@@ -93,7 +93,7 @@ spec:
       automountServiceAccountToken: false
       tolerations:
         - key: "karpenter.sh/disrupted"
-          Operator: "Exists"
+          operator: "Exists"
           effect: "NoSchedule"
       containers:
         - name: postgres
@@ -116,7 +116,7 @@ spec:
               cpu: 500m
               memory: 512Mi
         # Security context
-          SecurityContext:
+          securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false # Postgres needs write access
             runAsNonRoot: false
@@ -152,7 +152,7 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: jerney-db
-  posts:
+  ports:
     - port: 5432
       targetPort: 5432
       protocol: TCP
@@ -183,7 +183,7 @@ spec:
       automountServiceAccountToken: false
       tolerations:
         - key: "karpenter.sh/disrupted"
-          Operator: "Exists"
+          operator: "Exists"
           effect: "NoSchedule"
       initContainers:
         - name: wait-for-db
@@ -234,7 +234,7 @@ spec:
               cpu: 300m
               memory: 256Mi
           # Security context
-          SecurityContext:
+          securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             runAsNonRoot: true
@@ -299,7 +299,7 @@ spec:
     automountServiceAccountToken: false
     tolerations:
       - key: "karpenter.sh/disrupted"
-        Operator: "Exists"
+        operator: "Exists"
         effect: "NoSchedule"
     containers:
       - name: manikantarouthu/jerney-frontend:latest 
@@ -314,7 +314,7 @@ spec:
           limits:
             cpu: 200m
             memory: 128Mi
-        SecurityContext: 
+        securityContext: 
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false # Nginx needs write for cache/pid
           runAsNonRoot: true
@@ -383,7 +383,7 @@ spec:
 
 ---
 # ---- NetworkPolicy: Backend accepts traffic from Frontend only ---
-apiVersion: networking.io/v1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: jerney-backend-allow-frontend-only
