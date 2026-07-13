@@ -8,8 +8,8 @@ services:
       POSTGRES_USER: jerney_user
       POSTGRES_PASSWORD: jerney_pass_2026
       POSTGRES_DB: jerney_db
-    ports:
-      - "5432:5432"
+    #ports:
+    #  - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
