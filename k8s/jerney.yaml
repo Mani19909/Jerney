@@ -539,7 +539,7 @@ spec:
             timeoutSeconds: 3
       volumes:
         - name: db-storage
-          PersistentVolumeClaim:
+          persistentVolumeClaim:
             claimName: jerney-db-pvc
 
 ---
@@ -547,7 +547,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: jerney_db
+  name: jerney-db
   namespace: jerney
   labels: 
     app.kubernetes.io/name: jerney-db
@@ -626,7 +626,7 @@ spec:
                 secretKeyRef:
                   name: jerney-db-secret
                   key: POSTGRES_PASSWORD
-            - name: DB_PASSWORD
+            - name: DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: jerney-db-secret
@@ -700,45 +700,51 @@ spec:
       app.kubernetes.io/name: jerney-frontend
       app.kubernetes.io/part-of: jerney
       app.kubernetes.io/component: frontend
-  spec:
-    automountServiceAccountToken: false
-    tolerations:
-      - key: "karpenter.sh/disrupted"
-        operator: "Exists"
-        effect: "NoSchedule"
-    containers:
-      - name: manikantarouthu/jerney-frontend:latest 
-        image:
-        ports:
-          - containerPort: 8080
-            protocol: TCP
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi 
-          limits:
-            cpu: 200m
-            memory: 128Mi
-        securityContext: 
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false # Nginx needs write for cache/pid
-          runAsNonRoot: true
-          runAsUser: 101 # nginx user UID in alpine
-          capabilities:
-            drop:
-              - ALL
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 3
-          periodSeconds: 5
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: jerney-frontend
+        app.kubernetes.io/part-of: jerney
+        app.kubernetes.io/component: frontend
+    spec:
+      automountServiceAccountToken: false
+      tolerations:
+        - key: "karpenter.sh/disrupted"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: frontend
+          image: manikantarouthu/jerney-frontend:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi 
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext: 
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false # Nginx needs write for cache/pid
+            runAsNonRoot: true
+            runAsUser: 101 # nginx user UID in alpine
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
 
 ---
 # ---- Frontend Service (NodePort - for access via port-forward or node IP) ----
@@ -755,14 +761,14 @@ metadata:
     app.kubernetes.io/name: jerney-frontend
     app.kubernetes.io/part-of: jerney
     app.kubernetes.io/component: frontend
-    spec:
-      type: NodePort
-      selector:
-        app.kubernetes.io/name: jerney-frontend
-      ports:
-        - port: 80
-          targetPort: 8080
-          protocol: TCP
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: jerney-frontend
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
 
 ---
 # ------- NetworkPolicy: DB only accepts traffic from Backend ----
@@ -774,14 +780,14 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: jerney_db
+      app.kubernetes.io/name: jerney-db
   policyTypes:
     - Ingress
   ingress:
     - from:
         - podSelector:
             matchLabels:
-            app.kubernetes.io/name: jerney-backend
+              app.kubernetes.io/name: jerney-backend
       ports:
         - port: 5432
           protocol: TCP
