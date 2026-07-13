@@ -1,7 +1,7 @@
 services:
   # ---- PostgreSQL Database ----
   db:
-    image: postgresql:16-alpine
+    image: postgres:16-alpine
     container_name: jerney-db
     restart: unless-stopped
     environment:
@@ -18,39 +18,37 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    # Security: read-only root filesystem where possible
     tmpfs:
-      - /tmpf
+      - /tmp
       - /run
-# ---- Backend API ---
-backend:
-  build:
-    context: ./backend
-    dockerfile: Dockerfile
-  container_name: jerney-backend
-  restart: unless-stopped
-  environment:
-    PORT: "5000"
-    DB_USER: jerney_user
-    DB_PASSWORD: jerney_pass_2026
-    DB_HOST: db
-    DB_PORT: "5432"
-    DB_NAME: jerney_db
-  expose:
-    - "5000"
-  depends_on:
-    db:
-      condition: service_healthy
-  # Security: do not run as root (already in Dockerfile, but enforced here too)
-  Security_opt:
-    - no-new-privileges:true
-  read_only: true
-  tmpfs:
-    - /tmp
 
-# ---------- Frontend (Nginx + React) ------------
+  # ---- Backend API ----
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jerney-backend
+    restart: unless-stopped
+    environment:
+      PORT: "5000"
+      DB_USER: jerney_user
+      DB_PASSWORD: jerney_pass_2026
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: jerney_db
+    expose:
+      - "5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
 
-frontend:
+  # ---- Frontend ----
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -65,4 +63,3 @@ frontend:
 
 volumes:
   pgdata:
-    driver: local
