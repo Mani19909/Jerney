@@ -1,7 +1,7 @@
 services:
   # ---- PostgreSQL Database ----
   db:
-    image: 
+    image: postgresql:16-alpine
     container_name: jerney-db
     restart: unless-stopped
     environment:
@@ -45,3 +45,24 @@ backend:
   Security_opt:
     - no-new-privileges:true
   read_only: true
+  tmpfs:
+    - /tmp
+
+# ---------- Frontend (Nginx + React) ------------
+
+frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jerney-frontend
+    restart: unless-stopped
+    ports:
+      - "80:8080"
+    depends_on:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  pgdata:
+    driver: local
